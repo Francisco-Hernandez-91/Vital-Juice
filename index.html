@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitalJuice | Jugos Verdes Naturales</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <nav>
+            <div class="logo">Vital<span>Juice</span></div>
+            <ul class="nav-links">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#productos">Productos</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="inicio" class="hero">
+        <div class="hero-content">
+            <h1>Energía Natural en cada sorbo</h1>
+            <p>Descubre el poder de los vegetales frescos directamente en tu puerta.</p>
+            <a href="#productos" class="btn">Ver Menú</a>
+        </div>
+    </section>
+
+    <section id="productos" class="products">
+        <h2>Nuestros Jugos Especiales</h2>
+        <div class="product-grid" id="grid-productos">
+            <!-- Los productos se cargarán con JS -->
+        </div>
+    </section>
+
+    <section id="contacto" class="contact">
+        <h2>Haz tu pedido</h2>
+        <form id="contact-form">
+            <input type="text" placeholder="Tu Nombre" required>
+            <input type="email" placeholder="Tu numero de celular" required>
+            <textarea placeholder="¿Qué jugos te gustaría pedir?" rows="5"></textarea>
+            <button type="submit" class="btn">Enviar Pedido</button>
+        </form>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 VitalJuice - Salud y Bienestar</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
