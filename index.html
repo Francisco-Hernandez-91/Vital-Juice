@@ -3,52 +3,540 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VitalJuice | Jugos Verdes Naturales</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>VerdeVital | Jugos Verdes Naturales</title>
+    <!-- Cargando Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        green: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+        html { scroll-behavior: smooth; }
+        
+        /* Animaciones personalizadas para el carrito tipo desplegable (dropdown) */
+        .cart-open { 
+            transform: translateY(0) scale(1); 
+            opacity: 1; 
+            pointer-events: auto; 
+            visibility: visible;
+        }
+        .cart-closed { 
+            transform: translateY(-15px) scale(0.98); 
+            opacity: 0; 
+            pointer-events: none; 
+            visibility: hidden;
+        }
+        
+        .toast-enter { animation: slideInRight 0.3s forwards; }
+        .toast-leave { animation: fadeOut 0.3s forwards; }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        /* Efecto parallax suave para el hero */
+        .bg-hero {
+            background-image: linear-gradient(rgba(20, 83, 45, 0.7), rgba(20, 83, 45, 0.4)), url('https://images.unsplash.com/photo-1600271886742-f049cd451bba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 antialiased selection:bg-green-500 selection:text-white">
 
-    <header>
-        <nav>
-            <div class="logo">Vital<span>Juice</span></div>
-            <ul class="nav-links">
-                <li><a href="#inicio">Inicio</a></li>
-                <li><a href="#productos">Productos</a></li>
-                <li><a href="#contacto">Contacto</a></li>
-            </ul>
-        </nav>
+    <!-- Notificación Toast (Mensajes emergentes) -->
+    <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- Barra de Navegación -->
+    <!-- z-40 para que quede por encima del fondo oscuro pero debajo del menú desplegable si es necesario -->
+    <header class="fixed w-full top-0 z-40 bg-white/90 backdrop-blur-md border-b border-green-100 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <span class="font-extrabold text-2xl tracking-tight text-green-900">Verde<span class="text-green-500">Vital</span></span>
+                </div>
+                
+                <!-- Menú de Escritorio -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#beneficios" class="text-gray-600 hover:text-green-600 font-medium transition-colors">Beneficios</a>
+                    <a href="#tienda" class="text-gray-600 hover:text-green-600 font-medium transition-colors">Comprar Jugos</a>
+                    <a href="#nosotros" class="text-gray-600 hover:text-green-600 font-medium transition-colors">Nosotros</a>
+                </nav>
+                
+                <!-- Botón de Carrito -->
+                <div class="flex items-center relative">
+                    <!-- En móviles ocultamos el texto y dejamos solo el icono -->
+                    <button id="cart-toggle" class="relative flex items-center justify-center gap-2 bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 w-10 h-10 sm:w-auto sm:px-4 sm:py-2 rounded-full font-semibold transition-all focus:outline-none shadow-sm z-50">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <span class="hidden sm:inline text-sm md:text-base">Ver carrito</span>
+                        
+                        <!-- Badge del carrito -->
+                        <span id="cart-count" class="absolute -top-2 -right-2 sm:-right-2 inline-flex items-center justify-center w-6 h-6 text-xs font-bold leading-none text-white bg-red-500 rounded-full shadow-md hidden border-2 border-white">
+                            0
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <section id="inicio" class="hero">
-        <div class="hero-content">
-            <h1>Energía Natural en cada sorbo</h1>
-            <p>Descubre el poder de los vegetales frescos directamente en tu puerta.</p>
-            <a href="#productos" class="btn">Ver Menú</a>
+    <main>
+        <!-- Sección Hero -->
+        <section class="bg-hero h-screen min-h-[600px] flex items-center mt-0 pt-20 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full text-center md:text-left">
+                <span class="inline-block py-1 px-3 rounded-full bg-green-500/20 text-green-100 backdrop-blur-sm border border-green-400/30 font-semibold mb-6 uppercase tracking-wider text-sm">
+                    Prensados en frío diario
+                </span>
+                <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6 leading-tight drop-shadow-lg">
+                    El poder de lo <span class="text-green-400">Natural</span> <br> en cada gota.
+                </h1>
+                <p class="text-xl text-green-50 mb-10 max-w-2xl mx-auto md:mx-0 drop-shadow-md">
+                    Desintoxica tu cuerpo, eleva tu energía y fortalece tu sistema inmunológico con nuestras mezclas orgánicas 100% naturales.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                    <a href="#tienda" class="bg-green-500 hover:bg-green-400 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:shadow-[0_0_30px_rgba(34,197,94,0.6)] transform hover:-translate-y-1 text-center">
+                        Hacer mi pedido
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Separador ondulado -->
+            <div class="absolute bottom-0 w-full overflow-hidden leading-none">
+                <svg class="relative block w-full h-12 md:h-24" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.08,130.83,115.5,188.44,105.7,236.4,97.35,282.8,80.48,321.39,56.44Z" fill="#f9fafb"></path>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Sección Beneficios -->
+        <section id="beneficios" class="py-16 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Beneficio 1 -->
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
+                        <div class="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">100% Orgánicos</h3>
+                        <p class="text-gray-500">Ingredientes cultivados sin pesticidas, directo de agricultores locales a tu botella.</p>
+                    </div>
+                    <!-- Beneficio 2 -->
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
+                        <div class="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Prensados en Frío</h3>
+                        <p class="text-gray-500">Extraemos el jugo sin generar calor, conservando el 100% de las vitaminas y enzimas.</p>
+                    </div>
+                    <!-- Beneficio 3 -->
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
+                        <div class="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Energía Pura</h3>
+                        <p class="text-gray-500">Siente la diferencia instantánea con nuestra fórmula diseñada para revitalizarte.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Tienda -->
+        <section id="tienda" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Nuestros Jugos</h2>
+                    <p class="text-lg text-gray-500">Selecciona tus favoritos y crea tu propio plan de bienestar. Todos en presentación de 500ml.</p>
+                </div>
+                
+                <!-- Contenedor dinámico de productos -->
+                <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Los productos se insertarán aquí con JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Fondo oscuro al abrir el carrito (Overlay) -->
+    <!-- Z-index 30 para que quede detrás del header pero oscurezca la tienda -->
+    <div id="cart-drawer-overlay" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-30 hidden transition-opacity duration-300 opacity-0 mt-20"></div>
+    
+    <!-- Carrito Desplegable (Dropdown) -->
+    <div id="cart-drawer" class="fixed top-20 right-0 w-full sm:w-[420px] sm:right-6 sm:top-24 bg-white sm:rounded-3xl rounded-b-3xl shadow-2xl z-50 transform cart-closed transition-all duration-300 ease-in-out flex flex-col border border-gray-100 max-h-[calc(100vh-5rem)] sm:max-h-[calc(100vh-8rem)] origin-top-right">
+        
+        <!-- Cabecera del Carrito -->
+        <div class="flex items-center justify-between p-5 border-b border-gray-100 bg-white rounded-t-3xl">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                Tu Pedido
+            </h2>
+            <button id="close-cart" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
         </div>
-    </section>
-
-    <section id="productos" class="products">
-        <h2>Nuestros Jugos Especiales</h2>
-        <div class="product-grid" id="grid-productos">
-            <!-- Los productos se cargarán con JS -->
+        
+        <!-- Lista de Items en el Carrito -->
+        <div id="cart-items" class="flex-1 overflow-y-auto p-5 space-y-4 bg-white">
+            <!-- Los items del carrito se renderizan aquí -->
+            <div class="flex flex-col items-center justify-center py-10 text-gray-400">
+                <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <p>Tu carrito está vacío</p>
+                <button onclick="document.getElementById('close-cart').click(); window.location.href='#tienda';" class="mt-4 text-green-600 font-semibold hover:underline">Ir a comprar</button>
+            </div>
         </div>
-    </section>
+        
+        <!-- Resumen y Checkout -->
+        <div class="border-t border-gray-100 p-5 bg-gray-50 rounded-b-3xl">
+            <div class="flex justify-between text-lg font-bold text-gray-900 mb-2">
+                <p>Total a pagar</p>
+                <p id="cart-subtotal">$0.00</p>
+            </div>
+            <p class="text-xs text-gray-500 mb-4">Al hacer pedido, te redirigiremos a WhatsApp para confirmar detalles.</p>
+            <button id="checkout-btn" class="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white px-5 py-3.5 rounded-xl font-bold text-lg shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <!-- Icono de WhatsApp -->
+                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                Hacer pedido
+            </button>
+        </div>
+    </div>
 
-    <section id="contacto" class="contact">
-        <h2>Haz tu pedido</h2>
-        <form id="contact-form">
-            <input type="text" placeholder="Tu Nombre" required>
-            <input type="email" placeholder="Tu numero de celular" required>
-            <textarea placeholder="¿Qué jugos te gustaría pedir?" rows="5"></textarea>
-            <button type="submit" class="btn">Enviar Pedido</button>
-        </form>
-    </section>
-
-    <footer>
-        <p>&copy; 2026 VitalJuice - Salud y Bienestar</p>
+    <!-- Footer -->
+    <footer class="bg-green-900 text-green-100 py-12 border-t border-green-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <span class="font-extrabold text-2xl tracking-tight text-white mb-4 block">Verde<span class="text-green-500">Vital</span></span>
+                    <p class="text-green-200 text-sm max-w-xs">Revolucionando la forma en que consumes nutrientes. Natural, fresco y entregado en tu puerta.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4 uppercase text-sm tracking-wider">Enlaces Rápidos</h4>
+                    <ul class="space-y-2 text-sm text-green-300">
+                        <li><a href="#tienda" class="hover:text-white transition-colors">Tienda</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Suscripciones</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Preguntas Frecuentes</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Contacto</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4 uppercase text-sm tracking-wider">Boletín Saludable</h4>
+                    <p class="text-sm text-green-300 mb-4">Recibe tips de nutrición y descuentos exclusivos.</p>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="bg-green-800 border-none text-white px-4 py-2 rounded-l-lg focus:outline-none focus:ring-1 focus:ring-green-500 w-full">
+                        <button class="bg-green-500 hover:bg-green-400 px-4 py-2 rounded-r-lg font-bold text-white transition-colors">Unirse</button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-green-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-green-400">
+                <p>© 2026 VerdeVital. Todos los derechos reservados.</p>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-white transition-colors">Términos</a>
+                    <a href="#" class="hover:text-white transition-colors">Privacidad</a>
+                </div>
+            </div>
+        </div>
     </footer>
 
-    <script src="script.js"></script>
+    <!-- Script Principal de la Tienda -->
+    <script>
+        // Datos de los productos (Simulando una base de datos)
+        const products = [
+            {
+                id: 1,
+                name: "Detox Total",
+                description: "Apio, Manzana Verde, Espinaca, Limón y Jengibre.",
+                price: 85.00,
+                color: "bg-emerald-500", // Para el color decorativo de la imagen
+                img: "https://images.unsplash.com/photo-1608248593842-8021f62cb28d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 2,
+                name: "Energía Matutina",
+                description: "Piña, Pepino, Kale, Menta y Agua de Coco.",
+                price: 90.00,
+                color: "bg-green-400",
+                img: "https://images.unsplash.com/photo-1622597467836-f30c6a512403?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 3,
+                name: "Inmune Boost",
+                description: "Naranja, Zanahoria, Cúrcuma, Limón y Pimienta Cayena.",
+                price: 95.00,
+                color: "bg-orange-500",
+                img: "https://images.unsplash.com/photo-1605291583091-df071d3ceeb4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 4,
+                name: "Pack Semanal",
+                description: "6 Jugos surtidos + 2 Shots de jengibre de regalo.",
+                price: 450.00,
+                color: "bg-teal-600",
+                img: "https://images.unsplash.com/photo-1546823901-41db9fb91dc3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            }
+        ];
+
+        // Estado del Carrito
+        let cart = [];
+
+        // Funciones de Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            setupCartUI();
+        });
+
+        // 1. Renderizar Productos en la página
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = ''; // Limpiar grilla
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 group flex flex-col';
+                
+                card.innerHTML = `
+                    <div class="relative h-64 overflow-hidden bg-gray-100">
+                        <div class="absolute inset-0 ${product.color} opacity-20 mix-blend-multiply group-hover:opacity-10 transition-opacity z-10"></div>
+                        <img src="${product.img}" alt="${product.name}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur text-green-800 font-bold px-3 py-1 rounded-full shadow-sm z-20">
+                            $${product.price.toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">${product.name}</h3>
+                        <p class="text-gray-500 text-sm mb-6 flex-grow">${product.description}</p>
+                        <button onclick="addToCart(${product.id})" class="w-full bg-green-50 hover:bg-green-600 text-green-700 hover:text-white border border-green-200 hover:border-green-600 font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            Añadir al Carrito
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 2. Lógica del Carrito
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
+            updateCartUI();
+            showToast(`¡${product.name} añadido al carrito!`);
+            
+            // Animación del botón del carrito
+            const cartIcon = document.getElementById('cart-toggle');
+            cartIcon.classList.add('scale-110');
+            setTimeout(() => cartIcon.classList.remove('scale-110'), 200);
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartUI();
+        }
+
+        function changeQuantity(productId, delta) {
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity <= 0) {
+                    removeFromCart(productId);
+                } else {
+                    updateCartUI();
+                }
+            }
+        }
+
+        // 3. Actualizar la Interfaz del Carrito
+        function updateCartUI() {
+            const cartCount = document.getElementById('cart-count');
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartSubtotal = document.getElementById('cart-subtotal');
+            const checkoutBtn = document.getElementById('checkout-btn');
+
+            // Calcular totales
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalCost = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            // Actualizar Badge en el botón principal
+            cartCount.textContent = totalItems;
+            if (totalItems > 0) {
+                cartCount.classList.remove('hidden');
+            } else {
+                cartCount.classList.add('hidden');
+            }
+
+            // Actualizar lista de items dentro del dropdown
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-10 text-gray-400">
+                        <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <p>Tu carrito está vacío</p>
+                        <button onclick="toggleCart(); window.location.href='#tienda';" class="mt-4 text-green-600 font-semibold hover:underline">Ir a comprar</button>
+                    </div>
+                `;
+                checkoutBtn.disabled = true;
+            } else {
+                checkoutBtn.disabled = false;
+                cartItemsContainer.innerHTML = '';
+                
+                cart.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'flex items-center gap-3 py-2 border-b border-gray-50 last:border-0';
+                    itemEl.innerHTML = `
+                        <img src="${item.img}" alt="${item.name}" class="w-14 h-14 object-cover rounded-xl border border-gray-200">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-gray-900 text-sm truncate">${item.name}</h4>
+                            <p class="text-green-600 font-medium text-sm">$${(item.price * item.quantity).toFixed(2)}</p>
+                        </div>
+                        <div class="flex items-center gap-1 bg-gray-50 rounded-lg p-1 border border-gray-200 shrink-0">
+                            <button onclick="changeQuantity(${item.id}, -1)" class="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-600 hover:bg-white rounded-md transition-colors">-</button>
+                            <span class="w-4 text-center font-semibold text-gray-700 text-sm">${item.quantity}</span>
+                            <button onclick="changeQuantity(${item.id}, 1)" class="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-600 hover:bg-white rounded-md transition-colors">+</button>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(itemEl);
+                });
+            }
+
+            // Actualizar total
+            cartSubtotal.textContent = `$${totalCost.toFixed(2)}`;
+        }
+
+        // 4. Controles del Menú Desplegable (Dropdown)
+        const cartDrawer = document.getElementById('cart-drawer');
+        const overlay = document.getElementById('cart-drawer-overlay');
+        
+        function toggleCart() {
+            const isClosed = cartDrawer.classList.contains('cart-closed');
+            
+            if (isClosed) {
+                // Abrir menú
+                overlay.classList.remove('hidden');
+                setTimeout(() => {
+                    overlay.classList.remove('opacity-0');
+                    cartDrawer.classList.remove('cart-closed');
+                    cartDrawer.classList.add('cart-open');
+                }, 10);
+                // Prevenir scroll en móviles cuando está abierto
+                if(window.innerWidth < 640) document.body.style.overflow = 'hidden'; 
+            } else {
+                // Cerrar menú
+                cartDrawer.classList.remove('cart-open');
+                cartDrawer.classList.add('cart-closed');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300);
+                document.body.style.overflow = '';
+            }
+        }
+
+        function setupCartUI() {
+            document.getElementById('cart-toggle').addEventListener('click', toggleCart);
+            document.getElementById('close-cart').addEventListener('click', toggleCart);
+            overlay.addEventListener('click', toggleCart);
+            
+            // Botón de Checkout redirige a WhatsApp
+            document.getElementById('checkout-btn').addEventListener('click', () => {
+                if (cart.length === 0) return;
+
+                // --- CONFIGURA TU NÚMERO AQUÍ ---
+                // Ejemplo para México (52): 521XXXXXXXXXX
+                const phoneNumber = '528180809684'; 
+                
+                let message = '¡Hola VerdeVital! 🌿 Me gustaría hacer el siguiente pedido:\n\n';
+                let total = 0;
+
+                // Construir la lista de productos
+                cart.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    total += itemTotal;
+                    message += `▪️ ${item.quantity}x ${item.name} ($${itemTotal.toFixed(2)})\n`;
+                });
+
+                message += `\n*Total a pagar: $${total.toFixed(2)}*\n\n`;
+                message += 'Por favor, indíquenme cómo procedemos con el pago y la entrega. ¡Gracias!';
+
+                // Codificar el texto para la URL
+                const encodedMessage = encodeURIComponent(message);
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                
+                // Abrir WhatsApp en una nueva pestaña
+                window.open(whatsappUrl, '_blank');
+            });
+        }
+
+        // 5. Sistema de Notificaciones (Toasts)
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 toast-enter border border-gray-700';
+            
+            toast.innerHTML = `
+                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <p class="font-medium text-sm">${message}</p>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Eliminar después de 3 segundos
+            setTimeout(() => {
+                toast.classList.replace('toast-enter', 'toast-leave');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Efecto en la barra de navegación al hacer scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md');
+                header.classList.remove('border-green-100');
+            } else {
+                header.classList.remove('shadow-md');
+                header.classList.add('border-green-100');
+            }
+        });
+    </script>
 </body>
 </html>
